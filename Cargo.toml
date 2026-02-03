@@ -1,0 +1,51 @@
+[package]
+name = "smb-test"
+version = "0.0.1"
+license = "MIT OR Apache-2.0"
+edition = "2024"
+
+
+[dependencies]
+smb = {version = "0.11.1", default-features = false, features = ["sign", "encrypt", "compress", "std-fs-impls", "netbios-transport", "multi_threaded"] }
+
+
+[dev-dependencies]
+test-log = "0.2"
+
+[features]
+default = []
+
+[profile.release]
+debug = true
+lto = "thin"
+
+
+# use a separate profile for
+# releases we ship to the customer because
+#
+# * full lto takes a lot of time, so skipping it locally allows for faster builds
+# * we want to strip debug infos for customers, but we want debug infos for local
+#   profiling/debugging
+#
+# We turn this into a custom profile as that allows us to easily use --release
+# locally and the longer variant (--profile dist-release) in the CI scripts
+[profile.dist-release]
+inherits = "release"
+debug = false
+lto = true
+# we do not want to strip all to
+# keep backtraces intact
+strip = "debuginfo"
+
+
+[lib]
+crate-type = ["cdylib"]
+
+#[target.'cfg(not(target_os = "windows"))']
+#rustflags = ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]
+
+#[target.x86_64-pc-windows-msvc]
+#linker = "rust-lld"
+
+#[target.i686-pc-windows-msvc]
+#linker = "rust-lld"
